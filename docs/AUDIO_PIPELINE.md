@@ -70,5 +70,5 @@ PortusEchoes ships configured out of the box for up to **30 minutes (1,800 secon
 
 ### Expanding the Limit (Source Builds)
 Developers compiling their own binaries can customize or expand this limit:
-- In `.env`, adjust `LIVE_RECORDING_LIMIT_SECS` (default `1800`).
+- In `.env`, adjust `RECORDING_LIMIT_SECS` (default `1800`).
 - In `src-tauri/src/transcription/local/feed.rs` and `inference.rs`, adjust `LOCAL_PCM_BUDGET_SECONDS` and `INFERENCE_SAMPLE_BUDGET`.

@@ -130,7 +130,6 @@ export interface AppSettings {
   local_custom_model_path: string;
   language: string;
   hotkey: string;
-  cloud_recording_limit_secs: number;
   onboarding_complete: boolean;
 }
 

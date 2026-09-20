@@ -253,7 +253,6 @@ pub struct AppSettings {
     pub local_custom_model_path: String,
     pub language: String,
     pub hotkey: String,
-    pub cloud_recording_limit_secs: u32,
     pub onboarding_complete: bool,
 }
 
@@ -272,7 +271,6 @@ impl Default for AppSettings {
             local_custom_model_path: String::new(),
             language: "auto".to_string(),
             hotkey: "Ctrl+Alt+Space".to_string(),
-            cloud_recording_limit_secs: 1800,
             onboarding_complete: false,
         }
     }
@@ -341,7 +339,6 @@ mod tests {
         assert_eq!(s.local_model_kind, None);
         assert_eq!(s.language, "auto");
         assert_eq!(s.hotkey, "Ctrl+Alt+Space");
-        assert_eq!(s.cloud_recording_limit_secs, 1800);
         assert!(!s.onboarding_complete);
     }
 
@@ -357,7 +354,6 @@ local_model_path = ""
 local_model_kind = ""
 language = "auto"
 hotkey = "Ctrl+Alt+Space"
-cloud_recording_limit_secs = 1800
 onboarding_complete = false
 "#;
         let s: AppSettings = toml::from_str(toml_src).unwrap();
@@ -389,7 +385,6 @@ onboarding_complete = false
         let s: AppSettings = toml::from_str(r#"hotkey = "Alt+V""#).unwrap();
         assert_eq!(s.hotkey, "Alt+V");
         assert_eq!(s.language, "auto");
-        assert_eq!(s.cloud_recording_limit_secs, 1800);
         assert_eq!(s.openai_model_kind, None);
         assert_eq!(s.groq_model_kind, None);
     }

@@ -289,15 +289,10 @@ impl AppState {
         Ok(())
     }
 
-    /// Shared terminal recording bound for both completed and live Cloud capture routes.
-    pub fn cloud_recording_limit(&self) -> std::time::Duration {
-        std::time::Duration::from_secs(self.settings.lock().cloud_recording_limit_secs as u64)
-    }
-
-    /// Build-time configured recording limit for live Cloud streaming (gpt-live-transcribe).
+    /// Build-time configured recording limit across all modes (Local, Groq, and OpenAI).
     /// Returns None if configured to 0 (unlimited/untimed), or Some(Duration) if > 0.
-    pub fn live_cloud_recording_limit(&self) -> Option<std::time::Duration> {
-        const COMPILED_LIMIT: u32 = match compile_time_limit(env!("PORTUS_LIVE_RECORDING_LIMIT_SECS")) {
+    pub fn recording_limit(&self) -> Option<std::time::Duration> {
+        const COMPILED_LIMIT: u32 = match compile_time_limit(env!("PORTUS_RECORDING_LIMIT_SECS")) {
             Ok(val) => val,
             Err(_) => 1800,
         };
@@ -916,7 +911,7 @@ mod tests {
     }
 
     #[test]
-    fn live_cloud_recording_limit_parses_compile_time_env() {
+    fn recording_limit_parses_compile_time_env() {
         assert_eq!(super::compile_time_limit(""), Ok(0));
         assert_eq!(super::compile_time_limit("0"), Ok(0));
         assert_eq!(super::compile_time_limit("1800"), Ok(1800));
@@ -925,8 +920,8 @@ mod tests {
 
         let dir = tempfile::tempdir().unwrap();
         let state = AppState::init(dir.path().join("config.toml"));
-        let limit = state.live_cloud_recording_limit();
-        let expected_env: u32 = env!("PORTUS_LIVE_RECORDING_LIMIT_SECS").parse().unwrap_or(1800);
+        let limit = state.recording_limit();
+        let expected_env: u32 = env!("PORTUS_RECORDING_LIMIT_SECS").parse().unwrap_or(1800);
         if expected_env == 0 {
             assert_eq!(limit, None);
         } else {

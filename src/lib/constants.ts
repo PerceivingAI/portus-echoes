@@ -117,6 +117,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   local_custom_model_path: "",
   language: "auto",
   hotkey: "Ctrl+Alt+Space",
-  cloud_recording_limit_secs: 1800,
   onboarding_complete: false,
 };

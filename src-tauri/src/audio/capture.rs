@@ -201,7 +201,7 @@ pub struct AudioEngine {
 enum CaptureStart {
     LocalLive(LocalAudioFeed),
     CloudCompleted {
-        recording_limit: Duration,
+        recording_limit: Option<Duration>,
     },
     CloudLive {
         feed: CloudLiveFeed,
@@ -258,7 +258,7 @@ impl AudioEngine {
     pub fn start_cloud_completed_for(
         &self,
         recording_id: RecordingIdentity,
-        recording_limit: Duration,
+        recording_limit: Option<Duration>,
         start_allowed: StartGuard,
     ) -> bool {
         self.start_capture(
@@ -310,7 +310,7 @@ impl AudioEngine {
     fn start_cloud_completed_with_identity<F>(
         &self,
         recording_id: RecordingIdentity,
-        recording_limit: Duration,
+        recording_limit: impl Into<Option<Duration>>,
         start_allowed: StartGuard,
         open: F,
     ) -> bool
@@ -324,7 +324,9 @@ impl AudioEngine {
     {
         self.start_capture(
             recording_id,
-            CaptureStart::CloudCompleted { recording_limit },
+            CaptureStart::CloudCompleted {
+                recording_limit: recording_limit.into(),
+            },
             start_allowed,
             open,
         )
@@ -383,8 +385,12 @@ impl AudioEngine {
     }
 
     #[cfg(test)]
-    pub fn start_cloud_completed(&self, recording_limit: Duration) -> bool {
-        self.start_cloud_completed_for(RecordingIdentity(1), recording_limit, Arc::new(|| true))
+    pub fn start_cloud_completed(&self, recording_limit: impl Into<Option<Duration>>) -> bool {
+        self.start_cloud_completed_for(
+            RecordingIdentity(1),
+            recording_limit.into(),
+            Arc::new(|| true),
+        )
     }
 
     #[cfg(test)]
@@ -393,7 +399,7 @@ impl AudioEngine {
     }
 
     #[cfg(test)]
-    fn start_cloud_completed_with<F>(&self, recording_limit: Duration, open: F) -> bool
+    fn start_cloud_completed_with<F>(&self, recording_limit: impl Into<Option<Duration>>, open: F) -> bool
     where
         F: FnOnce(Sender<CaptureFailure>, u64, CaptureDestination) -> Option<Session>,
     {
@@ -457,7 +463,7 @@ impl AudioEngine {
             CaptureStart::LocalLive(feed) => (CaptureDestination::LocalLive(feed), None),
             CaptureStart::CloudCompleted { recording_limit } => (
                 CaptureDestination::CloudCompleted(CloudCaptureBuffer::default()),
-                Some(recording_limit),
+                recording_limit,
             ),
             CaptureStart::CloudLive {
                 feed,

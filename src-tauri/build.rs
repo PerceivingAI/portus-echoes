@@ -41,9 +41,8 @@ const GROQ_MODELS_ENV: &str = "GROQ_MODELS";
 const RUST_LOCAL_MODELS_ENV: &str = "PORTUS_LOCAL_MODEL_URLS";
 const RUST_OPENAI_MODELS_ENV: &str = "PORTUS_OPENAI_MODELS";
 const RUST_GROQ_MODELS_ENV: &str = "PORTUS_GROQ_MODELS";
-const LIVE_RECORDING_LIMIT_ENV: &str = "LIVE_RECORDING_LIMIT_SECS";
-const LIVE_REC_LIMIT_ENV: &str = "LIVE_REC_LIMIT";
-const RUST_LIVE_RECORDING_LIMIT_ENV: &str = "PORTUS_LIVE_RECORDING_LIMIT_SECS";
+const RECORDING_LIMIT_ENV: &str = "RECORDING_LIMIT_SECS";
+const RUST_RECORDING_LIMIT_ENV: &str = "PORTUS_RECORDING_LIMIT_SECS";
 
 fn env_files(root: &Path, mode: &str) -> [PathBuf; 4] {
     [
@@ -225,11 +224,10 @@ fn configured_max_length() -> String {
     }
 }
 
-fn configured_live_recording_limit() -> String {
-    let raw = vite_env_value(LIVE_RECORDING_LIMIT_ENV)
-        .or_else(|| vite_env_value(LIVE_REC_LIMIT_ENV));
+fn configured_recording_limit() -> String {
+    let raw = vite_env_value(RECORDING_LIMIT_ENV);
     match raw {
-        None => "300".to_string(),
+        None => "1800".to_string(),
         Some(val) => {
             let trimmed = val.trim();
             if trimmed.is_empty() || trimmed == "0" {
@@ -237,7 +235,7 @@ fn configured_live_recording_limit() -> String {
             } else {
                 let limit: u32 = trimmed
                     .parse()
-                    .unwrap_or_else(|error| panic!("LIVE_RECORDING_LIMIT_SECS must be a non-negative integer: {error}"));
+                    .unwrap_or_else(|error| panic!("RECORDING_LIMIT_SECS must be a non-negative integer: {error}"));
                 limit.to_string()
             }
         }
@@ -264,8 +262,8 @@ fn main() {
     let local_max_length = configured_max_length();
     println!("cargo:rustc-env=PORTUS_LOCAL_SEGMENT_DELIVERY={local_segment_delivery}");
     println!("cargo:rustc-env=PORTUS_LOCAL_MAX_LENGTH={local_max_length}");
-    let live_rec_limit = configured_live_recording_limit();
-    println!("cargo:rustc-env={RUST_LIVE_RECORDING_LIMIT_ENV}={live_rec_limit}");
+    let rec_limit = configured_recording_limit();
+    println!("cargo:rustc-env={RUST_RECORDING_LIMIT_ENV}={rec_limit}");
 
     tauri_build::try_build(
         tauri_build::Attributes::new()

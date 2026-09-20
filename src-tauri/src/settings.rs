@@ -150,34 +150,12 @@ mod tests {
     fn partial_config_loads_with_defaults() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("config.toml");
-        fs::write(
-            &path,
-            "language = \"de\"\ncloud_recording_limit_secs = 60\n",
-        )
-        .unwrap();
+        fs::write(&path, "language = \"de\"\n").unwrap();
         let s = load(&path);
         assert_eq!(s.language, "de");
-        assert_eq!(s.cloud_recording_limit_secs, 60);
         assert_eq!(s.hotkey, "Ctrl+Alt+Space");
     }
 
-    #[test]
-    fn partial_config_without_cloud_limit_uses_the_new_default() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("config.toml");
-        fs::write(&path, "language = \"de\"\n").unwrap();
-        let s = load(&path);
-        assert_eq!(s.cloud_recording_limit_secs, 1800);
-
-        save(&path, &s).unwrap();
-        let persisted = fs::read_to_string(&path).unwrap();
-        assert!(persisted.contains("cloud_recording_limit_secs = 1800"));
-        let removed_shared_duration_field = ["auto", "_stop_secs"].concat();
-        assert!(
-            !persisted.contains(&removed_shared_duration_field),
-            "saving current settings must never emit the removed shared recording-duration field"
-        );
-    }
 
     #[test]
     fn unset_active_provider_loads_as_local() {
@@ -218,7 +196,6 @@ mod tests {
             local_custom_model_path: "C:\\models\\user-local.bin".into(),
             language: "fr".into(),
             hotkey: "Alt+Q".into(),
-            cloud_recording_limit_secs: 120,
             onboarding_complete: true,
         };
         save(&path, &s).unwrap();

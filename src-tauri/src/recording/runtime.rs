@@ -270,10 +270,10 @@ fn start_recording_async(
                 } else {
                     finish_cancelled_start(&app, id);
                 }
-            } else {
+            } else if let Some(limit) = app.state::<AppState>().recording_limit() {
                 let timer_app = app.clone();
                 std::thread::spawn(move || {
-                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1800);
+                    let deadline = std::time::Instant::now() + limit;
                     while std::time::Instant::now() < deadline {
                         std::thread::sleep(std::time::Duration::from_millis(100));
                         let coordinator = timer_app.state::<RecordingCoordinator>();
@@ -298,7 +298,7 @@ fn start_recording_async(
                 Arc::new(move || guard_app.state::<RecordingCoordinator>().is_startable(id))
                     as Arc<dyn Fn() -> bool + Send + Sync>
             };
-            let recording_limit = app.state::<AppState>().cloud_recording_limit();
+            let recording_limit = app.state::<AppState>().recording_limit();
             let started = app.state::<Arc<AudioEngine>>().start_cloud_completed_for(
                 id,
                 recording_limit,
@@ -362,7 +362,7 @@ fn start_recording_async(
                 Arc::new(move || guard_app.state::<RecordingCoordinator>().is_startable(id))
                     as Arc<dyn Fn() -> bool + Send + Sync>
             };
-            let recording_limit = app.state::<AppState>().live_cloud_recording_limit();
+            let recording_limit = app.state::<AppState>().recording_limit();
             let started = app.state::<Arc<AudioEngine>>().start_cloud_live_for(
                 id,
                 feed,
