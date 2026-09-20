@@ -3,9 +3,10 @@ name: CI
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'v*.*.*'
-
 jobs:
   frontend:
     name: Frontend (Node & Vite)

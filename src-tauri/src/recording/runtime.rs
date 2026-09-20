@@ -670,7 +670,8 @@ mod admission_tests {
 
     #[test]
     fn cloud_route_is_resolved_from_admission_snapshot_and_not_reresolved_async() {
-        let source = include_str!("runtime.rs");
+        let source_raw = include_str!("runtime.rs");
+        let source = source_raw.replace("\r\n", "\n");
         let begin = source
             .split_once("pub fn begin_recording(")
             .expect("begin_recording must exist")
