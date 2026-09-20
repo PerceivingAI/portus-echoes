@@ -149,6 +149,8 @@ Access the Settings window from the system tray icon or during initial onboardin
   **[https://huggingface.co/ggerganov/whisper.cpp/tree/main](https://huggingface.co/ggerganov/whisper.cpp/tree/main)**
   Select **Custom Path** in the Local tab and browse to your downloaded `.bin` file.
 
+![Provider and Local Settings](assets/1-screens.png)
+
 ### 3. OpenAI Setup
 - In the **OpenAI** tab, enter your API key (stored securely in your OS credential store).
 - Select a standard model slot (`GPT Live Transcribe` or `GPT Transcribe`), or select **Custom Model ID** and enter any compatible model (e.g. `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`).
@@ -157,6 +159,12 @@ Access the Settings window from the system tray icon or during initial onboardin
 - In the **Groq** tab, enter your Groq API key.
 - Select a standard model (`Whisper Large V3 Turbo`) or select **Custom Model ID** and enter a custom Groq model ID.
 
+![OpenAI and Groq Settings](assets/2-screens.png)
+
+### 5. System Diagnostics
+Run full end-to-end diagnostics at any time from the tray menu or Settings window to verify microphone input streams, global keyboard shortcuts, and provider reachability before dictation:
+
+<img src="assets/3-diagnostics.png" alt="System Diagnostics" width="50%" />
 ---
 
 ## Documentation
