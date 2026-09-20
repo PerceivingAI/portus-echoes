@@ -81,9 +81,7 @@ fn list_reports_disk_state_by_download_path() {
     let (_dir, manager) = manager();
     std::fs::create_dir_all(manager.models_dir()).unwrap();
     std::fs::write(manager.model_path(SMALL_PATH), b"12345").unwrap();
-    let infos = manager
-        .list(&[SMALL_PATH.to_string(), MEDIUM_PATH.to_string()])
-        .unwrap();
+    let infos = manager.list();
     assert_eq!(infos.len(), 2);
     assert_eq!(infos[0].download_path, SMALL_PATH);
     assert!(infos[0].downloaded);
@@ -122,7 +120,6 @@ fn manager_rejects_non_https_duplicate_and_excess_configuration() {
 fn manager_rejects_every_operation_for_an_unconfigured_path() {
     let (_dir, manager) = manager();
     let unknown = "https://unconfigured.example.test/model.bin";
-    assert!(manager.list(&[unknown.to_string()]).is_err());
     assert!(manager.cancel(unknown).is_err());
     assert!(manager.delete(unknown).is_err());
 }

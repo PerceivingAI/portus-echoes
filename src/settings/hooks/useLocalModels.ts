@@ -39,9 +39,6 @@ type ApplySettings = (patch: Partial<AppSettings>) => void;
 type SetError = (message: string | null) => void;
 
 const DOWNLOAD_SUCCESS_HOLD_MS = 1_000;
-const LOCAL_DOWNLOAD_PATHS = LOCAL_MODEL_SLOTS.flatMap((model) =>
-  model ? [model.downloadPath] : []
-);
 
 function localSettingsPatch(settings: AppSettings): Partial<AppSettings> {
   return {
@@ -134,7 +131,7 @@ export function useLocalModels({
 
   const refreshLocal = useCallback(() => {
     const request = ++localListRequestRef.current;
-    listLocalModels(LOCAL_DOWNLOAD_PATHS)
+    listLocalModels()
       .then((infos) => {
         if (localListRequestRef.current === request) {
           setLocalInfos(infos);
@@ -142,10 +139,10 @@ export function useLocalModels({
       })
       .catch(() => {
         if (localListRequestRef.current === request) {
-          setError(errorMessageForCode("model_download"));
+          setLocalInfos([]);
         }
       });
-  }, [setError]);
+  }, []);
 
   useEffect(() => {
     refreshLocal();
@@ -294,7 +291,7 @@ export function useLocalModels({
       try {
         if (!info) {
           listRequest = ++localListRequestRef.current;
-          const refreshed = await listLocalModels(LOCAL_DOWNLOAD_PATHS);
+          const refreshed = await listLocalModels();
           if (localListRequestRef.current !== listRequest) {
             return;
           }

@@ -133,7 +133,7 @@ export function Overlay() {
             data-testid="clipboard-status-copied"
             className="text-sm font-semibold text-accent select-none"
           >
-            On Clipboard!
+            Copied to Clipboard!
           </span>
         ) : state.phase === "finalizing" || clipboardStatus === "processing" ? (
           <span

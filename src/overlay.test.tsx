@@ -165,7 +165,7 @@ describe("recording overlay", () => {
     await waitFor(() => {
       const copied = document.querySelector("[data-testid='clipboard-status-copied']");
       expect(copied).not.toBeNull();
-      expect(copied?.textContent).toBe("On Clipboard!");
+      expect(copied?.textContent).toBe("Copied to Clipboard!");
       expect(copied?.className).toContain("text-accent");
       expect(document.querySelector("[data-testid='clipboard-status-processing']")).toBeNull();
     });

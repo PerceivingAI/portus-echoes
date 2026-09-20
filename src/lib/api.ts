@@ -75,8 +75,8 @@ export const getDiagnosticsState = () =>
 
 export const runDiagnostics = () =>
   invoke<DiagnosticsStorageData>("run_diagnostics");
-export const listLocalModels = (downloadPaths: string[]) =>
-  invoke<LocalModelInfo[]>("list_local_models", { downloadPaths });
+export const listLocalModels = () =>
+  invoke<LocalModelInfo[]>("list_local_models");
 
 export const downloadModel = (downloadPath: string) =>
   invoke<void>("download_model", { downloadPath });

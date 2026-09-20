@@ -191,20 +191,19 @@ impl DownloadManager {
         storage::available_download_bytes(&self.models_dir)
     }
 
-    /// Disk state for the frontend's environment-defined model list.
-    pub fn list(&self, download_paths: &[String]) -> Result<Vec<LocalModelInfo>, DownloadError> {
-        download_paths
+    /// Disk state for the build-time configured model list.
+    pub fn list(&self) -> Vec<LocalModelInfo> {
+        self.configured_download_paths
             .iter()
             .map(|download_path| {
-                self.ensure_configured(download_path)?;
                 let path = self.model_path(download_path);
                 let meta = storage::file_metadata(&path);
-                Ok(LocalModelInfo {
+                LocalModelInfo {
                     download_path: download_path.clone(),
                     path: path.to_string_lossy().to_string(),
                     downloaded: meta.is_some(),
                     size_bytes: meta.map(|metadata| metadata.len()),
-                })
+                }
             })
             .collect()
     }

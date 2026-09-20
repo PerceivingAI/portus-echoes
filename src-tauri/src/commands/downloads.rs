@@ -10,15 +10,12 @@ use crate::transcription::local::LocalEngine;
 
 use super::CommandResult;
 
-/// Disk state for the frontend's environment-defined Local model list.
+/// Disk state for the build-time configured Local model list.
 #[tauri::command]
 pub fn list_local_models(
-    download_paths: Vec<String>,
     downloads: State<'_, Arc<DownloadManager>>,
 ) -> CommandResult<Vec<crate::model_download::LocalModelInfo>> {
-    downloads
-        .list(&download_paths)
-        .map_err(|_| UserErrorCode::ModelDownload)
+    Ok(downloads.list())
 }
 
 /// Start an environment-defined model download in the background.
