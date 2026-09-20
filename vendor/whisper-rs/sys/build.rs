@@ -180,8 +180,18 @@ fn prepare_vulkan_build_environment(repo_root: &Path, target: &str) {
             sdk.join("Lib").display()
         );
         env::set_var("VULKAN_SDK", &sdk);
+        if let Some(spirv_path) = find_file_recursive(&sdk, "SPIRV-HeadersConfig.cmake") {
+            if let Some(spirv_cmake_dir) = spirv_path.parent().and_then(|p| p.parent()) {
+                let mut prefix_paths = vec![spirv_cmake_dir.to_path_buf(), sdk.clone()];
+                if let Some(existing) = env::var_os("CMAKE_PREFIX_PATH") {
+                    prefix_paths.extend(env::split_paths(&existing));
+                }
+                if let Ok(joined) = env::join_paths(prefix_paths) {
+                    env::set_var("CMAKE_PREFIX_PATH", joined);
+                }
+            }
+        }
         prepend_path(&sdk.join("Bin"));
-    } else if let Some(sdk) = env::var_os("VULKAN_SDK") {
         let sdk = PathBuf::from(sdk);
         if sdk.join("lib").is_dir() {
             println!(
@@ -233,6 +243,26 @@ fn parse_numeric_version(value: &str) -> Option<Vec<u64>> {
     }
 }
 
+fn find_file_recursive(dir: &Path, target: &str) -> Option<PathBuf> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_file() {
+            if path
+                .file_name()
+                .is_some_and(|name| name.to_string_lossy().eq_ignore_ascii_case(target))
+            {
+                return Some(path);
+            }
+        } else if path.is_dir() {
+            if let Some(found) = find_file_recursive(&path, target) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
 fn validate_windows_vulkan_sdk(sdk: &Path) {
     for relative in [
         "Include/vulkan/vulkan.h",
@@ -246,11 +276,10 @@ fn validate_windows_vulkan_sdk(sdk: &Path) {
             );
         }
     }
-    let spirv_cmake_paths = [
-        "Lib/cmake/SPIRV-Headers/SPIRV-HeadersConfig.cmake",
-        "share/cmake/SPIRV-Headers/SPIRV-HeadersConfig.cmake",
-    ];
-    if !spirv_cmake_paths.iter().any(|rel| sdk.join(rel).is_file()) {
+    let found_spirv = sdk.join("Lib/cmake/SPIRV-Headers/SPIRV-HeadersConfig.cmake").is_file()
+        || sdk.join("share/cmake/SPIRV-Headers/SPIRV-HeadersConfig.cmake").is_file()
+        || find_file_recursive(sdk, "SPIRV-HeadersConfig.cmake").is_some();
+    if !found_spirv {
         panic!(
             "PortusEchoes Vulkan SDK is incomplete (missing SPIRV-HeadersConfig.cmake). Reinstall the LunarG Vulkan SDK with development and shader-tool components."
         );
@@ -276,10 +305,9 @@ fn run_vulkan_cmake_preflight(repo_root: &Path) {
     std::fs::create_dir_all(&source).expect("failed to create Vulkan preflight source directory");
     std::fs::write(
         source.join("CMakeLists.txt"),
-        "cmake_minimum_required(VERSION 3.24)\nproject(portus_vulkan_preflight LANGUAGES C CXX)\nfind_package(Vulkan COMPONENTS glslc REQUIRED)\nif (DEFINED ENV{VULKAN_SDK})\n    list(APPEND CMAKE_PREFIX_PATH \"$ENV{VULKAN_SDK}\")\nendif()\nfind_package(SPIRV-Headers CONFIG REQUIRED)\n",
+        "cmake_minimum_required(VERSION 3.24)\nproject(portus_vulkan_preflight LANGUAGES C CXX)\nfind_package(Vulkan COMPONENTS glslc REQUIRED)\nif (DEFINED ENV{VULKAN_SDK})\n    list(APPEND CMAKE_PREFIX_PATH \"$ENV{VULKAN_SDK}\")\nendif()\nif (DEFINED ENV{CMAKE_PREFIX_PATH})\n    list(APPEND CMAKE_PREFIX_PATH \"$ENV{CMAKE_PREFIX_PATH}\")\nendif()\nfind_package(SPIRV-Headers CONFIG REQUIRED)\n",
     )
     .expect("failed to write Vulkan preflight CMake project");
-
     let output = Command::new("cmake")
         .arg("-S")
         .arg(&source)
