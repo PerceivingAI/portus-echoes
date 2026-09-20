@@ -60,6 +60,11 @@
     "resources": [
       "assets/ggml-silero-v6.2.0.bin",
       "assets/silero-vad-LICENSE.txt"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "installerHooks": "nsis/hooks.nsh"
+      }
+    }
   }
 }

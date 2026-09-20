@@ -17,7 +17,7 @@ Hold-to-talk speech transcription at your cursor. Transcribe locally on your dev
 
 ---
 
-## Choose Your Provider (100% Independent)
+## Choose Your Provider
 
 Every provider in PortusEchoes is completely independent. You only need to configure what you want to use:
 
@@ -42,7 +42,38 @@ You never have to download local models if you only want cloud transcription, an
 
 ---
 
-## Quickstart
+## Installation & Releases
+
+Pre-built releases for Windows and Linux are available under [GitHub Releases](https://github.com/PerceivingAI/portus-echoes/releases).
+
+### Windows
+1. Download `PortusEchoes_<version>_x64-setup.exe` from the latest release.
+2. Run the installer and follow the setup wizard. On the finish page, you can optionally check the box to create a desktop shortcut (left unchecked by default).
+3. Once installed, PortusEchoes will launch and sit in your system tray.
+
+### Linux
+Choose the package format best suited for your distribution:
+- **AppImage (Universal standalone):**
+  1. Download `portus-echoes_<version>_amd64.AppImage`.
+  2. Make it executable:
+     ```bash
+     chmod +x portus-echoes_*.AppImage
+     ```
+  3. Run it directly:
+     ```bash
+     ./portus-echoes_*.AppImage
+     ```
+- **Debian / Ubuntu Package (`.deb`):**
+  1. Download `portus-echoes_<version>_amd64.deb`.
+  2. Install it with `dpkg`:
+     ```bash
+     sudo dpkg -i portus-echoes_*_amd64.deb
+     ```
+  3. Launch PortusEchoes from your application menu or terminal.
+
+---
+
+## Building from Source (Quickstart)
 
 ### Prerequisites
 
