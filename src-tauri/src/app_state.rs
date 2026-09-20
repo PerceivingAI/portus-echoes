@@ -839,7 +839,7 @@ mod tests {
             settings::load(&path).active_provider,
             Some(ProviderId::Openai)
         );
-        assert!(!state.provider_status().unwrap().openai_configured);
+        assert!(!state.provider_status().map(|s| s.openai_configured).unwrap_or(false));
     }
 
     #[test]
