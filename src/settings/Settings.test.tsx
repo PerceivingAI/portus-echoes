@@ -2485,7 +2485,7 @@ describe("field-scoped persistence and completion", () => {
     expect(apiMocks.saveSettings).not.toHaveBeenCalled();
   });
 
-  it("keeps a folder-picked Local path draft until shared Close flushes it", async () => {
+  it("persists a folder-picked Local path immediately upon selection", async () => {
     const selectedPath = "D:\\models\\folder-picked.bin";
     dialogMocks.open.mockResolvedValueOnce(selectedPath);
     render(
@@ -2499,14 +2499,12 @@ describe("field-scoped persistence and completion", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Browse model file" }));
     await waitFor(() => expect(customPathInput().value).toBe(selectedPath));
-    expect(apiMocks.setLocalCustomModelPath).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
-
     await waitFor(() =>
       expect(apiMocks.setLocalCustomModelPath).toHaveBeenCalledWith(selectedPath)
     );
-    expect(windowMocks.hide).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(windowMocks.hide).toHaveBeenCalledTimes(1));
     expect(lastSavedSettings()).toEqual(
       expect.objectContaining({
         local_model_path: "",

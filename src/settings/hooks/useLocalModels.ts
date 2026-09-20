@@ -356,11 +356,23 @@ export function useLocalModels({
         directory: false,
         filters: [{ name: "Whisper Model (.bin)", extensions: ["bin"] }],
       });
-      if (typeof picked === "string") customPathDraft.setDraft(picked);
+      if (typeof picked === "string") {
+        customPathDraft.setDraft(picked);
+        await enqueue(localQueue, async () => {
+          const next = await setLocalCustomModelPath(picked);
+          commitLocalSettings(next);
+          customPathDraft.markPersisted(picked);
+        });
+      }
     } catch (cause) {
       setError(errorMessageForCode(cause));
     }
-  }, [customPathDraft.setDraft, setError]);
+  }, [
+    commitLocalSettings,
+    customPathDraft.markPersisted,
+    customPathDraft.setDraft,
+    setError,
+  ]);
 
   const startDownload = useCallback(
     async (downloadPath: string) => {
