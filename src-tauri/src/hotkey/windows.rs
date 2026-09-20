@@ -4,9 +4,11 @@ use std::cell::RefCell;
 use std::ptr::null_mut;
 use std::sync::mpsc::channel;
 
+use crate::models::HotkeyEvent;
 use winapi::shared::minwindef::{LPARAM, LRESULT, WPARAM};
 use winapi::um::libloaderapi::GetModuleHandleW;
-use winapi::um::processthreadsapi::GetCurrentThreadId;
+use winapi::um::processthreadsapi::{GetCurrentThread, GetCurrentThreadId, SetThreadPriority};
+use winapi::um::winbase::THREAD_PRIORITY_HIGHEST;
 use winapi::um::winuser::*;
 
 use super::combo::{
@@ -14,10 +16,75 @@ use super::combo::{
 };
 use super::engine::{HotkeyEventSink, PlatformRegistration};
 
+const WM_APP_RESET_HOTKEY: u32 = 0x8001;
+
 struct HookThreadState {
     trigger_vk: u32,
+    combo: ParsedCombo,
     state: ComboState,
     sink: HotkeyEventSink,
+    tid: u32,
+}
+
+fn is_key_physically_down(vk: u32) -> bool {
+    unsafe { (GetAsyncKeyState(vk as i32) as u16 & 0x8000) != 0 }
+}
+
+fn combo_modifiers_physically_down(combo: &ParsedCombo) -> bool {
+    if combo.ctrl && !is_key_physically_down(VK_CONTROL as u32) {
+        return false;
+    }
+    if combo.alt && !is_key_physically_down(VK_MENU as u32) {
+        return false;
+    }
+    if combo.shift && !is_key_physically_down(VK_SHIFT as u32) {
+        return false;
+    }
+    if combo.super_
+        && !is_key_physically_down(VK_LWIN as u32)
+        && !is_key_physically_down(VK_RWIN as u32)
+    {
+        return false;
+    }
+    true
+}
+
+fn combo_physically_down(trigger_vk: u32, combo: &ParsedCombo) -> bool {
+    is_key_physically_down(trigger_vk) && combo_modifiers_physically_down(combo)
+}
+
+fn spawn_hold_watchdog(
+    trigger_vk: u32,
+    combo: ParsedCombo,
+    sink: HotkeyEventSink,
+    tid: u32,
+) {
+    std::thread::spawn(move || {
+        let mut consecutive_up_count: u32 = 0;
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(40));
+
+            // If normal hook_proc already handled WM_KEYUP, exit cleanly.
+            if !sink.is_pressed() {
+                break;
+            }
+
+            if combo_physically_down(trigger_vk, &combo) {
+                consecutive_up_count = 0;
+            } else {
+                consecutive_up_count += 1;
+                // Require 2 consecutive checks (~80ms) to prevent microsecond key bounces
+                if consecutive_up_count >= 2 {
+                    // Physical key has been released, but WM_KEYUP was never received or was dropped.
+                    sink.force_release();
+                    unsafe {
+                        PostThreadMessageW(tid, WM_APP_RESET_HOTKEY, 0, 0);
+                    }
+                    break;
+                }
+            }
+        }
+    });
 }
 
 thread_local! {
@@ -96,6 +163,10 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
         HOOK_STATE.with(|cell| {
             let mut borrow = cell.borrow_mut();
             if let Some(st) = borrow.as_mut() {
+                if !st.sink.is_pressed() && st.state.is_active() {
+                    st.state.reset();
+                }
+
                 let event = match wparam as u32 {
                     WM_KEYDOWN | WM_SYSKEYDOWN => {
                         st.state.on_key_down(vk == st.trigger_vk, mod_bit)
@@ -104,7 +175,15 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
                     _ => None,
                 };
                 if let Some(event) = event {
-                    st.sink.send(event);
+                    let is_pressed = event == HotkeyEvent::Pressed;
+                    if st.sink.send(event) && is_pressed {
+                        spawn_hold_watchdog(
+                            st.trigger_vk,
+                            st.combo.clone(),
+                            st.sink.clone(),
+                            st.tid,
+                        );
+                    }
                 }
             }
         });
@@ -202,13 +281,17 @@ pub fn start(
         std::sync::atomic::Ordering::Relaxed,
     );
     let (ready_tx, ready_rx) = channel::<Result<u32, HotkeyError>>();
+    let combo_for_state = combo.clone();
     let join = std::thread::spawn(move || unsafe {
         let tid = GetCurrentThreadId();
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST as i32);
         HOOK_STATE.with(|cell| {
             *cell.borrow_mut() = Some(HookThreadState {
                 trigger_vk,
-                state: ComboState::new(&combo),
+                combo,
+                state: ComboState::new(&combo_for_state),
                 sink,
+                tid,
             });
         });
         let hook = SetWindowsHookExW(
@@ -224,7 +307,15 @@ pub fn start(
         let _ = ready_tx.send(Ok(tid));
         let mut msg: MSG = std::mem::zeroed();
         // Returns 0 on WM_QUIT (posted by stop()).
-        while GetMessageW(&mut msg, null_mut(), 0, 0) > 0 {}
+        while GetMessageW(&mut msg, null_mut(), 0, 0) > 0 {
+            if msg.message == WM_APP_RESET_HOTKEY {
+                HOOK_STATE.with(|cell| {
+                    if let Some(st) = cell.borrow_mut().as_mut() {
+                        st.state.reset();
+                    }
+                });
+            }
+        }
         UnhookWindowsHookEx(hook);
         HOOK_STATE.with(|cell| *cell.borrow_mut() = None);
     });

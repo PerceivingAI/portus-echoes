@@ -113,11 +113,15 @@ impl HotkeyEventSink {
         self.tx.send(event).is_ok()
     }
 
-    #[allow(dead_code)] // Windows focused-window fallback
-    fn force_release(&self) {
+    pub(super) fn force_release(&self) {
+        self.hold_in_flight.store(false, Ordering::SeqCst);
         if self.pressed.swap(false, Ordering::SeqCst) {
             let _ = self.tx.send(HotkeyEvent::Released);
         }
+    }
+
+    pub(super) fn is_pressed(&self) -> bool {
+        self.pressed.load(Ordering::SeqCst)
     }
 }
 
