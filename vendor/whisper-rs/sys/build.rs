@@ -238,7 +238,6 @@ fn validate_windows_vulkan_sdk(sdk: &Path) {
         "Include/vulkan/vulkan.h",
         "Lib/vulkan-1.lib",
         "Bin/glslc.exe",
-        "Lib/cmake/SPIRV-Headers/SPIRV-HeadersConfig.cmake",
     ] {
         if !sdk.join(relative).is_file() {
             panic!(
@@ -246,6 +245,15 @@ fn validate_windows_vulkan_sdk(sdk: &Path) {
                 relative
             );
         }
+    }
+    let spirv_cmake_paths = [
+        "Lib/cmake/SPIRV-Headers/SPIRV-HeadersConfig.cmake",
+        "share/cmake/SPIRV-Headers/SPIRV-HeadersConfig.cmake",
+    ];
+    if !spirv_cmake_paths.iter().any(|rel| sdk.join(rel).is_file()) {
+        panic!(
+            "PortusEchoes Vulkan SDK is incomplete (missing SPIRV-HeadersConfig.cmake). Reinstall the LunarG Vulkan SDK with development and shader-tool components."
+        );
     }
 }
 
