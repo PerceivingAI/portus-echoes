@@ -44,8 +44,9 @@ const RUST_GROQ_MODELS_ENV: &str = "PORTUS_GROQ_MODELS";
 const RECORDING_LIMIT_ENV: &str = "RECORDING_LIMIT_SECS";
 const RUST_RECORDING_LIMIT_ENV: &str = "PORTUS_RECORDING_LIMIT_SECS";
 
-fn env_files(root: &Path, mode: &str) -> [PathBuf; 4] {
+fn env_files(root: &Path, mode: &str) -> [PathBuf; 5] {
     [
+        root.join(".env.example"),
         root.join(".env"),
         root.join(".env.local"),
         root.join(format!(".env.{mode}")),

@@ -29,6 +29,9 @@ jobs:
       - name: Install project dependencies
         run: npm ci
 
+      - name: Configure environment
+        run: cp .env.example .env
+
       - name: Prepare pinned whisper.cpp source
         run: npm run bootstrap:deps
 
