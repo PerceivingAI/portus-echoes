@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-select-local-model"
+description = "Enables the select_local_model command without any pre-configured scope."
+commands.allow = ["select_local_model"]
+
+[[permission]]
+identifier = "deny-select-local-model"
+description = "Denies the select_local_model command without any pre-configured scope."
+commands.deny = ["select_local_model"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-is-hotkey-registered"
+description = "Enables the is_hotkey_registered command without any pre-configured scope."
+commands.allow = ["is_hotkey_registered"]
+
+[[permission]]
+identifier = "deny-is-hotkey-registered"
+description = "Denies the is_hotkey_registered command without any pre-configured scope."
+commands.deny = ["is_hotkey_registered"]

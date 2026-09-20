@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-provider-status"
+description = "Enables the get_provider_status command without any pre-configured scope."
+commands.allow = ["get_provider_status"]
+
+[[permission]]
+identifier = "deny-get-provider-status"
+description = "Denies the get_provider_status command without any pre-configured scope."
+commands.deny = ["get_provider_status"]

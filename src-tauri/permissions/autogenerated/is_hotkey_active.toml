@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-is-hotkey-active"
+description = "Enables the is_hotkey_active command without any pre-configured scope."
+commands.allow = ["is_hotkey_active"]
+
+[[permission]]
+identifier = "deny-is-hotkey-active"
+description = "Denies the is_hotkey_active command without any pre-configured scope."
+commands.deny = ["is_hotkey_active"]

@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  --hud-placeholder: #3b485e;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-transparent text-slate-100 antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+@layer components {
+  .custom-input::placeholder {
+    color: var(--hud-placeholder);
+  }
+}
+
+/* The overlay window is fully transparent — the pill renders in React. */
+#overlay-root {
+  background: transparent;
+}

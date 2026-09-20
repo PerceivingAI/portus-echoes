@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-select-active-provider"
+description = "Enables the select_active_provider command without any pre-configured scope."
+commands.allow = ["select_active_provider"]
+
+[[permission]]
+identifier = "deny-select-active-provider"
+description = "Denies the select_active_provider command without any pre-configured scope."
+commands.deny = ["select_active_provider"]

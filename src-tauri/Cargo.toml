@@ -1,0 +1,58 @@
+[package]
+name = "portus-echoes"
+version = "0.1.0"
+description = "Hold-to-talk transcription at the cursor"
+edition = "2021"
+rust-version = "1.88"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+dotenvy = "0.15.7"
+serde_json = "1"
+url = "2"
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1.0.7"
+keyring = "4"
+dirs = "6.0.0"
+parking_lot = "0.12.5"
+tauri-plugin-global-shortcut = "2.3.2"
+winapi = { version = "0.3.9", features = ["winuser", "winbase", "processthreadsapi", "psapi", "libloaderapi", "errhandlingapi", "winerror", "handleapi", "securitybaseapi", "winnt", "minwindef", "windef", "oleauto", "combaseapi", "objbase"] }
+cpal = "0.18.1"
+rubato = "4.0.0"
+hound = "3.5.1"
+whisper-rs = { path = "../vendor/whisper-rs", features = ["vulkan"] }
+reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "multipart", "default-tls"] }
+sha2 = "0.10"
+tokio = { version = "1.53.1", features = ["fs", "io-util", "macros", "rt-multi-thread", "sync", "time"] }
+tokio-util = { version = "0.7.19", features = ["rt"] }
+tokio-tungstenite = { version = "0.26", features = ["native-tls"] }
+futures-util = { version = "0.3", default-features = false, features = ["sink"] }
+base64 = "0.22"
+arboard = "3.6.1"
+tauri-plugin-dialog = "2.7.2"
+mp3lame-encoder = "0.2.5"
+
+[features]
+# Use the system webview for dev; embed assets for release builds.
+custom-protocol = ["tauri/custom-protocol"]
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+webview2-com = "=0.38.2"
+windows = { version = "0.58", features = [
+    "Win32_UI_Accessibility",
+    "Win32_System_Com",
+    "Win32_System_Ole",
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+] }
+[target.'cfg(target_os = "linux")'.dependencies]
+x11rb = { version = "0.14.0", features = ["xkb"] }

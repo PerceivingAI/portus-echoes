@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-openai-custom-model"
+description = "Enables the set_openai_custom_model command without any pre-configured scope."
+commands.allow = ["set_openai_custom_model"]
+
+[[permission]]
+identifier = "deny-set-openai-custom-model"
+description = "Denies the set_openai_custom_model command without any pre-configured scope."
+commands.deny = ["set_openai_custom_model"]

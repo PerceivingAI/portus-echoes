@@ -1,0 +1,28 @@
+# Node dependencies & build output
+node_modules/
+dist/
+
+# Rust & Tauri build outputs
+/target/
+src-tauri/target/
+src-tauri/gen/
+
+# Dependencies & downloaded models
+.deps/
+models/
+
+# Environment & local secrets
+.env
+.env.*
+!.env.example
+
+# Packaging & archives
+*.zip
+*.tar.gz
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Add
+notes/

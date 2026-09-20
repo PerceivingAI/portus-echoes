@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-focused-hotkey-key-event"
+description = "Enables the focused_hotkey_key_event command without any pre-configured scope."
+commands.allow = ["focused_hotkey_key_event"]
+
+[[permission]]
+identifier = "deny-focused-hotkey-key-event"
+description = "Denies the focused_hotkey_key_event command without any pre-configured scope."
+commands.deny = ["focused_hotkey_key_event"]

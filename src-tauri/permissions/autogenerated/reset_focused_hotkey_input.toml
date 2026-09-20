@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reset-focused-hotkey-input"
+description = "Enables the reset_focused_hotkey_input command without any pre-configured scope."
+commands.allow = ["reset_focused_hotkey_input"]
+
+[[permission]]
+identifier = "deny-reset-focused-hotkey-input"
+description = "Denies the reset_focused_hotkey_input command without any pre-configured scope."
+commands.deny = ["reset_focused_hotkey_input"]

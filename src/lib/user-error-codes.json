@@ -1,0 +1,16 @@
+[
+  "credential_storage",
+  "invalid_shortcut",
+  "model_download",
+  "network_connection",
+  "cloud_service",
+  "local_model_not_found",
+  "settings_save",
+  "unsupported_whisper_model",
+  "insufficient_ram",
+  "api_key_rejected",
+  "rate_limit",
+  "recording_too_large",
+  "delivery",
+  "unexpected"
+]
