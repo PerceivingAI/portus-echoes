@@ -56,9 +56,13 @@ impl PlatformStore {
 
 impl CredentialStore for PlatformStore {
     fn get(&self, service: &str, account: &str) -> Result<Option<String>, CredentialStoreError> {
-        match Self::entry(service, account)?.get_password() {
+        let entry = match Self::entry(service, account) {
+            Ok(entry) => entry,
+            Err(_) => return Ok(None),
+        };
+        match entry.get_password() {
             Ok(secret) => Ok(Some(secret)),
-            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(keyring::Error::NoEntry | keyring::Error::NoDefaultStore) => Ok(None),
             Err(_) => Err(CredentialStoreError::ReadFailed),
         }
     }
@@ -70,8 +74,12 @@ impl CredentialStore for PlatformStore {
     }
 
     fn delete(&self, service: &str, account: &str) -> Result<(), CredentialStoreError> {
-        match Self::entry(service, account)?.delete_credential() {
-            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+        let entry = match Self::entry(service, account) {
+            Ok(entry) => entry,
+            Err(_) => return Ok(()),
+        };
+        match entry.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry | keyring::Error::NoDefaultStore) => Ok(()),
             Err(_) => Err(CredentialStoreError::DeleteFailed),
         }
     }

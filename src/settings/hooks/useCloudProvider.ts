@@ -129,7 +129,7 @@ export function useCloudProvider({
       })
       .catch(() => {
         if (keyLoadRequestRef.current === request) {
-          setError(errorMessageForCode("credential_storage"));
+          keyDraft.loadPersisted("");
         }
       });
     return () => {
@@ -137,7 +137,7 @@ export function useCloudProvider({
         keyLoadRequestRef.current += 1;
       }
     };
-  }, [keyDraft.loadPersisted, provider, setError]);
+  }, [keyDraft.loadPersisted, provider]);
 
   const flushKey = useCallback(
     () =>
