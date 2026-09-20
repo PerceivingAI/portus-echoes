@@ -45,7 +45,7 @@ sudo dnf install @development-tools cmake alsa-lib-devel vulkan-loader-devel lib
    ```bash
    cp .env.example .env
    ```
-
+   Configure build-time options such as curated models and `RECORDING_LIMIT_SECS` (default `1800` seconds / 30 minutes; `0` for untimed).
 3. **Development Launch:**
    Starts Vite and the Tauri desktop development binary:
    ```bash

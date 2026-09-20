@@ -7,7 +7,7 @@ PortusEchoes features a system-wide push-to-talk shortcut system and a floating 
 ## 1. Global Shortcut Architecture
 
 ### 1.1. Low-Level Hooking
-- **Windows:** Installs a passive low-level keyboard hook (`SetWindowsHookExW(WH_KEYBOARD_LL)`) on a dedicated thread. Does not monopolize or alter system key dispatch.
+- **Windows:** Installs a passive low-level keyboard hook (`SetWindowsHookExW(WH_KEYBOARD_LL)`) on a dedicated high-priority thread (`THREAD_PRIORITY_HIGHEST`). Includes an active-hold hardware watchdog using `GetAsyncKeyState` to ensure long recordings never get stuck if Windows swallows a key-up message during focus changes. Does not monopolize or alter system key dispatch.
 - **Linux (X11):** Uses `x11rb` to grab the configured keycode and modifier mask on the root desktop window (`XGrabKey`).
 - **Linux (Wayland):** Interacts through the XDG Desktop Portal GlobalShortcuts interface and libinput event streams.
 
