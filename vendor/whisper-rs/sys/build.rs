@@ -104,6 +104,21 @@ fn main() {
         .define("GGML_LLAMAFILE", "OFF")
         .define("GGML_BUILD_TESTS", "OFF")
         .define("GGML_BUILD_EXAMPLES", "OFF")
+        .define("GGML_NATIVE", "OFF")
+        .define("GGML_AVX512", "OFF")
+        .define("GGML_AVX512_VBMI", "OFF")
+        .define("GGML_AVX512_VNNI", "OFF")
+        .define("GGML_AVX512_BF16", "OFF")
+        .define("GGML_AVX_VNNI", "OFF")
+        .define("GGML_AMX_TILE", "OFF")
+        .define("GGML_AMX_INT8", "OFF")
+        .define("GGML_AMX_BF16", "OFF")
+        .define("GGML_AVX2", "ON")
+        .define("GGML_AVX", "ON")
+        .define("GGML_FMA", "ON")
+        .define("GGML_F16C", "ON")
+        .define("GGML_SSE42", "ON")
+        .define("GGML_BMI2", "ON")
         .pic(true);
 
     if cfg!(target_os = "windows") {
