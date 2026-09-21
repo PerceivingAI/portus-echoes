@@ -477,7 +477,7 @@ fn segment_inference_failure_preserves_decoded_clipboard_text() {
 
     worker.queue_segment(0, vec![0.1; 512]).unwrap();
     worker.queue_segment(1, vec![0.2; 512]).unwrap();
-    worker.queue_segment(2, vec![0.3; 512]).unwrap();
+    let _ = worker.queue_segment(2, vec![0.3; 512]);
     assert_eq!(
         worker.finish(),
         Ok(LocalTerminalOutput::TerminalClipboard("first segment".to_string()))
