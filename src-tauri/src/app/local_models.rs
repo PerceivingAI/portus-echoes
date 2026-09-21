@@ -34,6 +34,9 @@ pub(crate) fn apply_runtime_intent(
         let Err(error) = result else {
             return;
         };
+        if matches!(error, LocalPreloadError::ModelNotFound) {
+            return;
+        }
         if let Some(app) = app_handle.as_ref() {
             let _ = app.emit(
                 "model:preload:error",

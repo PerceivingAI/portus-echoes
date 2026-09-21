@@ -6,21 +6,18 @@ import {
   getSettings,
   getSettingsNavigation,
 } from "../lib/api";
-import { DEFAULT_SETTINGS } from "../lib/constants";
 import {
   isSettingsNavigationState,
   type AppSettings,
   type SettingsNavigationState,
-  type UserErrorCode,
 } from "../lib/types";
 import { useTauriEvent } from "../hooks/useTauriEvent";
 import { StepWelcome } from "./StepWelcome";
 import { StepSetupTabs as Settings } from "../settings/Settings";
 
 export function Onboarding() {
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [screen, setScreen] = useState<1 | 2 | null>(null);
-  const [startupErrorCode, setStartupErrorCode] = useState<UserErrorCode | undefined>();
   const [navigation, setNavigation] = useState<SettingsNavigationState | null>(null);
   const navigationRevisionRef = useRef(0);
   const screenRef = useRef<typeof screen>(screen);
@@ -82,23 +79,30 @@ export function Onboarding() {
 
   useEffect(() => {
     let active = true;
-    getSettings()
-      .then((loaded) => {
-        if (!active) return;
-        setSettings(loaded);
-        setScreen(
-          navigationRevisionRef.current > 0 || loaded.onboarding_complete ? 2 : 1
-        );
-      })
-      .catch(() => {
-        if (!active) return;
-        setSettings(DEFAULT_SETTINGS);
-        setStartupErrorCode("unexpected");
-        setScreen(2);
-      });
+    let retryTimer: number | null = null;
+
+    const loadRealSettings = () => {
+      getSettings()
+        .then((loaded) => {
+          if (!active) return;
+          setSettings(loaded);
+          setScreen(
+            navigationRevisionRef.current > 0 || loaded.onboarding_complete ? 2 : 1
+          );
+        })
+        .catch(() => {
+          if (!active) return;
+          retryTimer = window.setTimeout(loadRealSettings, 200);
+        });
+    };
+
+    loadRealSettings();
 
     return () => {
       active = false;
+      if (retryTimer !== null) {
+        window.clearTimeout(retryTimer);
+      }
     };
   }, []);
 
@@ -106,6 +110,10 @@ export function Onboarding() {
     const final = await completeOnboarding();
     setSettings(final);
   };
+
+  if (!settings || !screen) {
+    return null;
+  }
 
   return (
     <div className="h-full w-full bg-hud-panel rounded-2xl overflow-hidden text-slate-100 select-none flex flex-col">
@@ -118,7 +126,6 @@ export function Onboarding() {
           onFinish={finish}
           initialTab={navigation?.tab ?? "settings"}
           navigationTab={navigation?.tab}
-          initialErrorCode={startupErrorCode}
         />
       ) : null}
     </div>

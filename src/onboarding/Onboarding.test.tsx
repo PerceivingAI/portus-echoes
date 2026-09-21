@@ -114,14 +114,18 @@ describe("onboarding startup routing", () => {
     expect(screen.queryByRole("button", { name: "Welcome" })).toBeNull();
   });
 
-  it("routes startup load failure into Settings as unexpected without raw text", async () => {
-    apiMocks.getSettings.mockRejectedValue("raw settings load failure");
+  it("retries loading real backend settings on temporary startup failure", async () => {
+    apiMocks.getSettings
+      .mockRejectedValueOnce("temporary ipc bridge delay")
+      .mockResolvedValueOnce({
+        ...DEFAULT_SETTINGS,
+        onboarding_complete: false,
+      });
 
     render(<Onboarding />);
 
-    expect(await screen.findByText("Settings")).toBeTruthy();
-    expect(screen.getByText("unexpected")).toBeTruthy();
-    expect(screen.queryByText("raw settings load failure")).toBeNull();
+    expect(await screen.findByRole("button", { name: "Welcome" })).toBeTruthy();
+    expect(screen.queryByText("temporary ipc bridge delay")).toBeNull();
   });
 
   it("completes onboarding through the narrow completion command", async () => {
@@ -178,15 +182,12 @@ describe("onboarding startup routing", () => {
       eventMocks.emit({ tab: "diagnostics", revision: 1 });
     });
 
-    expect(await screen.findByText("Settings")).toBeTruthy();
-    expect(screen.getByTestId("settings-tab").textContent).toBe("diagnostics");
-    expect(screen.queryByRole("button", { name: "Welcome" })).toBeNull();
-
     await act(async () => {
       resolveSettings({ ...DEFAULT_SETTINGS, onboarding_complete: false });
       await Promise.resolve();
     });
 
+    expect(await screen.findByText("Settings")).toBeTruthy();
     expect(screen.getByTestId("settings-tab").textContent).toBe("diagnostics");
     expect(screen.queryByRole("button", { name: "Welcome" })).toBeNull();
   });
