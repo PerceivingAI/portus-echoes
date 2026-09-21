@@ -112,6 +112,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   groq_model: GROQ_MODEL_SLOTS[0]?.id ?? "",
   groq_model_kind: GROQ_MODEL_SLOTS[0] ? "standard" : "",
   groq_custom_model: "",
+  local_model: LOCAL_MODEL_SLOTS[0]?.label ?? "",
   local_model_path: "",
   local_model_kind: LOCAL_MODEL_SLOTS[0] ? "standard" : "",
   local_custom_model_path: "",

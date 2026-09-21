@@ -247,9 +247,10 @@ pub struct AppSettings {
     #[serde(with = "empty_string_as_none")]
     pub groq_model_kind: Option<CloudModelKind>,
     pub groq_custom_model: String,
-    pub local_model_path: String,
+    pub local_model: String,
     #[serde(with = "empty_string_as_none")]
     pub local_model_kind: Option<LocalModelKind>,
+    pub local_model_path: String,
     pub local_custom_model_path: String,
     pub language: String,
     pub hotkey: String,
@@ -260,14 +261,24 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             active_provider: Some(ProviderId::Local),
-            openai_model: String::new(),
-            openai_model_kind: None,
+            openai_model: crate::cloud_catalog::first_standard_model_id(ProviderId::Openai)
+                .unwrap_or_default()
+                .to_string(),
+            openai_model_kind: crate::cloud_catalog::first_standard_model_id(ProviderId::Openai)
+                .map(|_| CloudModelKind::Standard),
             openai_custom_model: String::new(),
-            groq_model: String::new(),
-            groq_model_kind: None,
+            groq_model: crate::cloud_catalog::first_standard_model_id(ProviderId::Groq)
+                .unwrap_or_default()
+                .to_string(),
+            groq_model_kind: crate::cloud_catalog::first_standard_model_id(ProviderId::Groq)
+                .map(|_| CloudModelKind::Standard),
             groq_custom_model: String::new(),
+            local_model: crate::model_download::first_configured_model_label()
+                .unwrap_or_default()
+                .to_string(),
+            local_model_kind: crate::model_download::first_configured_model_label()
+                .map(|_| LocalModelKind::Standard),
             local_model_path: String::new(),
-            local_model_kind: None,
             local_custom_model_path: String::new(),
             language: "auto".to_string(),
             hotkey: "Ctrl+Alt+Space".to_string(),
@@ -331,17 +342,17 @@ mod tests {
     fn defaults_match_documented_schema() {
         let s = AppSettings::default();
         assert_eq!(s.active_provider, Some(ProviderId::Local));
-        assert_eq!(s.openai_model, "");
-        assert_eq!(s.openai_model_kind, None);
-        assert_eq!(s.groq_model, "");
-        assert_eq!(s.groq_model_kind, None);
+        assert_eq!(s.openai_model, "gpt-live-transcribe");
+        assert_eq!(s.openai_model_kind, Some(CloudModelKind::Standard));
+        assert_eq!(s.groq_model, "whisper-large-v3-turbo");
+        assert_eq!(s.groq_model_kind, Some(CloudModelKind::Standard));
+        assert_eq!(s.local_model, "Whisper Small Q8");
+        assert_eq!(s.local_model_kind, Some(LocalModelKind::Standard));
         assert_eq!(s.local_model_path, "");
-        assert_eq!(s.local_model_kind, None);
         assert_eq!(s.language, "auto");
         assert_eq!(s.hotkey, "Ctrl+Alt+Space");
         assert!(!s.onboarding_complete);
     }
-
     #[test]
     fn parses_documented_example() {
         let toml_src = r#"
@@ -373,8 +384,8 @@ onboarding_complete = false
         assert_eq!(s.groq_model_kind, None);
         assert_eq!(s.local_model_kind, None);
 
-        let out = toml::to_string(&AppSettings::default()).unwrap();
-        assert!(out.contains(r#"active_provider = "local""#), "got:\n{out}");
+        let out = toml::to_string(&s).unwrap();
+        assert!(out.contains(r#"active_provider = """#), "got:\n{out}");
         assert!(out.contains(r#"openai_model_kind = """#), "got:\n{out}");
         assert!(out.contains(r#"groq_model_kind = """#), "got:\n{out}");
         assert!(out.contains(r#"local_model_kind = """#), "got:\n{out}");
@@ -385,8 +396,13 @@ onboarding_complete = false
         let s: AppSettings = toml::from_str(r#"hotkey = "Alt+V""#).unwrap();
         assert_eq!(s.hotkey, "Alt+V");
         assert_eq!(s.language, "auto");
-        assert_eq!(s.openai_model_kind, None);
-        assert_eq!(s.groq_model_kind, None);
+        assert_eq!(s.active_provider, Some(ProviderId::Local));
+        assert_eq!(s.openai_model, "gpt-live-transcribe");
+        assert_eq!(s.openai_model_kind, Some(CloudModelKind::Standard));
+        assert_eq!(s.groq_model, "whisper-large-v3-turbo");
+        assert_eq!(s.groq_model_kind, Some(CloudModelKind::Standard));
+        assert_eq!(s.local_model, "Whisper Small Q8");
+        assert_eq!(s.local_model_kind, Some(LocalModelKind::Standard));
     }
 
     #[test]

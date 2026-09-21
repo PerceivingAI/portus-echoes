@@ -125,6 +125,7 @@ export interface AppSettings {
   groq_model: string;
   groq_model_kind: CloudModelKind;
   groq_custom_model: string;
+  local_model: string;
   local_model_path: string;
   local_model_kind: LocalModelKind;
   local_custom_model_path: string;

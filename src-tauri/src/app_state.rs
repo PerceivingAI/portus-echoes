@@ -34,7 +34,8 @@ fn local_runtime_target(settings: &AppSettings) -> LocalRuntimeTarget {
     }
 }
 
-fn apply_clean_install_model_defaults(settings: &mut AppSettings, models_dir: &Path) {
+fn apply_clean_install_model_defaults(settings: &mut AppSettings) {
+    settings.active_provider = Some(ProviderId::Local);
     if let Some(model_id) = crate::cloud_catalog::first_standard_model_id(ProviderId::Openai) {
         settings.openai_model = model_id.to_string();
         settings.openai_model_kind = Some(CloudModelKind::Standard);
@@ -43,10 +44,11 @@ fn apply_clean_install_model_defaults(settings: &mut AppSettings, models_dir: &P
         settings.groq_model = model_id.to_string();
         settings.groq_model_kind = Some(CloudModelKind::Standard);
     }
-    if let Some(model_path) = crate::model_download::first_configured_model_path(models_dir) {
-        settings.local_model_path = model_path.to_string_lossy().into_owned();
+    if let Some(label) = crate::model_download::first_configured_model_label() {
+        settings.local_model = label.to_string();
         settings.local_model_kind = Some(LocalModelKind::Standard);
     }
+    settings.local_model_path.clear();
 }
 
 /// Shared application state managed by Tauri.
@@ -82,8 +84,8 @@ impl AppState {
             // Installation defaults are real saved selections, not readiness.
             // All populated providers select Standard slot 1 from the same
             // build-time catalogs used by the frontend. The Local managed path
-            // may legitimately be absent until the user downloads that model.
-            apply_clean_install_model_defaults(&mut initial_settings, &models_dir);
+            // is empty until the user downloads that model.
+            apply_clean_install_model_defaults(&mut initial_settings);
             let _ = settings::save(&settings_path, &initial_settings);
         } else if let Ok(Some(pending_path)) =
             crate::model_download::pending_selected_deletion_recovery(&models_dir)
@@ -418,6 +420,8 @@ mod tests {
         let state = AppState::init(config_path.clone());
         let settings = state.settings_snapshot();
 
+        assert_eq!(settings.active_provider, Some(ProviderId::Local));
+
         let openai = crate::cloud_catalog::first_standard_model_id(ProviderId::Openai);
         assert_eq!(settings.openai_model, openai.unwrap_or_default());
         assert_eq!(
@@ -432,19 +436,13 @@ mod tests {
             groq.map(|_| CloudModelKind::Standard)
         );
 
-        let expected_local =
-            crate::model_download::first_configured_model_path(&dir.path().join("models"));
-        assert_eq!(
-            settings.local_model_path,
-            expected_local
-                .as_ref()
-                .map(|path| path.to_string_lossy().into_owned())
-                .unwrap_or_default()
-        );
+        let local_label = crate::model_download::first_configured_model_label();
+        assert_eq!(settings.local_model, local_label.unwrap_or_default());
         assert_eq!(
             settings.local_model_kind,
-            expected_local.map(|_| LocalModelKind::Standard)
+            local_label.map(|_| LocalModelKind::Standard)
         );
+        assert_eq!(settings.local_model_path, "");
         assert!(matches!(
             state.local_runtime_intent().target(),
             LocalRuntimeTarget::Unloaded

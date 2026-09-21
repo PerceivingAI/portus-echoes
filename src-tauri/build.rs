@@ -135,6 +135,27 @@ fn configured_local_model_urls() -> Vec<String> {
         })
         .collect()
 }
+fn configured_local_models_json() -> String {
+    let Some(raw) = vite_env_value(LOCAL_MODELS_ENV) else {
+        return "[]".to_string();
+    };
+    if raw.trim().is_empty() {
+        return "[]".to_string();
+    }
+
+    let entries: serde_json::Value = serde_json::from_str(&raw)
+        .unwrap_or_else(|error| panic!("{LOCAL_MODELS_ENV} must be valid JSON: {error}"));
+    let entries = entries
+        .as_array()
+        .unwrap_or_else(|| panic!("{LOCAL_MODELS_ENV} must be a JSON array"));
+    assert!(
+        entries.len() <= 2,
+        "{LOCAL_MODELS_ENV} supports at most two standard models"
+    );
+
+    serde_json::to_string(entries).expect("validated local model catalog must serialize")
+}
+
 fn configured_cloud_models(key: &str) -> String {
     let Some(raw) = vite_env_value(key) else {
         return "[]".to_string();
@@ -247,7 +268,8 @@ fn main() {
     let configured_urls = serde_json::to_string(&configured_local_model_urls())
         .expect("local model URL list must serialize");
     println!("cargo:rustc-env={RUST_LOCAL_MODELS_ENV}={configured_urls}");
-
+    let configured_local_models = configured_local_models_json();
+    println!("cargo:rustc-env=PORTUS_LOCAL_MODELS={configured_local_models}");
     let openai_models = configured_cloud_models(OPENAI_MODELS_ENV);
     let groq_models = configured_cloud_models(GROQ_MODELS_ENV);
     println!("cargo:rustc-env={RUST_OPENAI_MODELS_ENV}={openai_models}");

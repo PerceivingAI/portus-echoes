@@ -100,7 +100,21 @@ pub fn select_local_model(
     if !downloads.is_managed_model_path(&selected_path) {
         return Err(UserErrorCode::Unexpected);
     }
+    let label = model_download::label_for_download_path(&path)
+        .or_else(|| {
+            if let Some(first_path) =
+                crate::model_download::first_configured_model_path(downloads.models_dir())
+            {
+                if first_path == selected_path {
+                    return crate::model_download::first_configured_model_label();
+                }
+            }
+            None
+        })
+        .unwrap_or(&path)
+        .to_string();
     let (settings, (), intent) = state.update_settings_with_local_runtime_result(|settings| {
+        settings.local_model = label;
         settings.local_model_path = path;
         settings.local_model_kind = Some(LocalModelKind::Standard);
         ((), true)
@@ -124,6 +138,7 @@ pub fn select_local_custom_model(
     engine: State<'_, LocalEngine>,
 ) -> CommandResult<AppSettings> {
     let (settings, (), intent) = state.update_settings_with_local_runtime_result(|settings| {
+        settings.local_model = settings.local_custom_model_path.clone();
         settings.local_model_path = settings.local_custom_model_path.clone();
         settings.local_model_kind = Some(LocalModelKind::Custom);
         ((), true)
@@ -143,6 +158,7 @@ pub fn set_local_custom_model_path(
         let selected = settings.local_model_kind == Some(LocalModelKind::Custom);
         settings.local_custom_model_path = path.clone();
         if selected {
+            settings.local_model = path.clone();
             settings.local_model_path = path;
         }
         ((), selected)

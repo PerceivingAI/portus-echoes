@@ -14,7 +14,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use parking_lot::Mutex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 use tauri::{AppHandle, Emitter};
 use tokio_util::sync::CancellationToken;
 
@@ -26,19 +27,48 @@ use crate::models::UserErrorCode;
 use storage::{MAX_DOWNLOAD_BYTES, MAX_MODELS_DIR_BYTES};
 use transfer::{download_to_disk, DownloadFailure};
 
+#[derive(Debug, Clone, Deserialize)]
+struct ConfiguredLocalModel {
+    #[serde(rename = "downloadPath")]
+    download_path: String,
+    label: String,
+}
+
+static LOCAL_CATALOG: LazyLock<Vec<ConfiguredLocalModel>> = LazyLock::new(|| {
+    serde_json::from_str(env!("PORTUS_LOCAL_MODELS")).unwrap_or_default()
+});
+
+fn local_catalog() -> &'static [ConfiguredLocalModel] {
+    LOCAL_CATALOG.as_slice()
+}
+
 /// Exact Local model URLs compiled from the same Vite environment used by the
 /// frontend build. `build.rs` validates and serializes this value.
 pub fn configured_download_paths() -> Vec<String> {
-    serde_json::from_str(env!("PORTUS_LOCAL_MODEL_URLS"))
-        .expect("build.rs must emit a valid Local model URL list")
+    local_catalog()
+        .iter()
+        .map(|m| m.download_path.clone())
+        .collect()
+}
+
+pub(crate) fn first_configured_model_label() -> Option<&'static str> {
+    local_catalog().first().map(|m| m.label.as_str())
+}
+
+
+pub(crate) fn label_for_download_path(path: &str) -> Option<&'static str> {
+    local_catalog()
+        .iter()
+        .find(|m| m.download_path == path)
+        .map(|m| m.label.as_str())
 }
 
 /// Deterministic managed path for build-time Local Standard slot 1.
 /// The file need not exist; selection and download/readiness are independent.
 pub(crate) fn first_configured_model_path(models_dir: &Path) -> Option<PathBuf> {
-    configured_download_paths()
+    local_catalog()
         .first()
-        .map(|download_path| storage::model_path(models_dir, download_path))
+        .map(|m| storage::model_path(models_dir, &m.download_path))
 }
 
 /// Journal a managed deletion before the file is removed. The journal exists

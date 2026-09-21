@@ -120,9 +120,6 @@ impl HotkeyEventSink {
         }
     }
 
-    pub(super) fn is_pressed(&self) -> bool {
-        self.pressed.load(Ordering::SeqCst)
-    }
 }
 
 impl HotkeyEngine {

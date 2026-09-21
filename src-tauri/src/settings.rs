@@ -38,12 +38,7 @@ pub fn load(path: &Path) -> AppSettings {
         Err(_) => return preserve_and_default(path),
     };
     match toml::from_str::<AppSettings>(&raw) {
-        Ok(mut settings) => {
-            if settings.active_provider.is_none() {
-                settings.active_provider = Some(ProviderId::Local);
-            }
-            settings
-        }
+        Ok(settings) => settings,
         Err(_) => preserve_and_default(path),
     }
 }
@@ -158,11 +153,11 @@ mod tests {
 
 
     #[test]
-    fn unset_active_provider_loads_as_local() {
+    fn unset_active_provider_deserializes_as_none() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("config.toml");
         fs::write(&path, "active_provider = \"\"\n").unwrap();
-        assert_eq!(load(&path).active_provider, Some(ProviderId::Local));
+        assert_eq!(load(&path).active_provider, None);
     }
 
     #[test]
@@ -191,6 +186,7 @@ mod tests {
             groq_model: "environment-groq-model".into(),
             groq_model_kind: Some(CloudModelKind::Custom),
             groq_custom_model: "user-groq-model".into(),
+            local_model: "Whisper Small Q8".into(),
             local_model_path: "C:\\models\\environment-local.bin".into(),
             local_model_kind: Some(LocalModelKind::Standard),
             local_custom_model_path: "C:\\models\\user-local.bin".into(),

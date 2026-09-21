@@ -194,8 +194,10 @@ fn main() {
         .expect("error while building PortusEchoes");
 
     app.run(|handle, event| match event {
-        tauri::RunEvent::ExitRequested { api, .. } => {
-            api.prevent_exit();
+        tauri::RunEvent::ExitRequested { code, api, .. } => {
+            if code.is_none() {
+                api.prevent_exit();
+            }
         }
         tauri::RunEvent::Exit => {
             handle.state::<hotkey::HotkeyEngine>().stop();

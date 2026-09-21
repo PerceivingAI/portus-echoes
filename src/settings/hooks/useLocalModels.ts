@@ -42,14 +42,14 @@ const DOWNLOAD_SUCCESS_HOLD_MS = 1_000;
 
 function localSettingsPatch(settings: AppSettings): Partial<AppSettings> {
   return {
+    local_model: settings.local_model,
     local_model_path: settings.local_model_path,
     local_model_kind: settings.local_model_kind,
     local_custom_model_path: settings.local_custom_model_path,
   };
 }
-
 function localSelectionFromSettings(
-  settings: Pick<AppSettings, "local_model_path" | "local_model_kind">,
+  settings: Pick<AppSettings, "local_model" | "local_model_path" | "local_model_kind">,
   infos: LocalModelInfo[]
 ): LocalSelection {
   if (settings.local_model_kind === "custom") {
@@ -58,15 +58,22 @@ function localSelectionFromSettings(
   if (settings.local_model_kind !== "standard") {
     return null;
   }
-  if (!settings.local_model_path) {
-    const first = LOCAL_MODEL_SLOTS[0];
-    return first ? { kind: "standard", downloadPath: first.downloadPath } : null;
+  if (settings.local_model) {
+    const slot = LOCAL_MODEL_SLOTS.find(
+      (s) => s && (s.label === settings.local_model || s.downloadPath === settings.local_model)
+    );
+    if (slot) {
+      return { kind: "standard", downloadPath: slot.downloadPath };
+    }
   }
-  const info = infos.find((model) => model.path === settings.local_model_path);
-  return {
-    kind: "standard",
-    downloadPath: info?.download_path ?? settings.local_model_path,
-  };
+  if (settings.local_model_path) {
+    const info = infos.find((model) => model.path === settings.local_model_path);
+    if (info) {
+      return { kind: "standard", downloadPath: info.download_path };
+    }
+  }
+  const first = LOCAL_MODEL_SLOTS[0];
+  return first ? { kind: "standard", downloadPath: first.downloadPath } : null;
 }
 
 export function useLocalModels({
@@ -162,6 +169,7 @@ export function useLocalModels({
   }, [
     localInfos,
     settings.local_custom_model_path,
+    settings.local_model,
     settings.local_model_kind,
     settings.local_model_path,
   ]);
