@@ -55,6 +55,7 @@ const settings = {
   groq_model: "",
   groq_model_kind: "" as const,
   groq_custom_model: "",
+  local_model: "",
   local_model_path: "",
   local_model_kind: "" as const,
   local_custom_model_path: "",
