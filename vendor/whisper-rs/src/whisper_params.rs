@@ -618,32 +618,28 @@ impl<'a, 'b> FullParams<'a, 'b> {
     /// or extend this one to support their use.
     ///
     /// Defaults to None.
-    pub fn set_abort_callback_safe<O, F>(&mut self, closure: O)
+    pub fn set_abort_callback_safe<F>(&mut self, closure: Option<F>)
     where
         F: FnMut() -> bool + 'static,
-        O: Into<Option<F>>,
     {
         use std::ffi::c_void;
 
-        unsafe extern "C" fn trampoline<F>(user_data: *mut c_void) -> bool
-        where
-            F: FnMut() -> bool,
-        {
-            let user_data = &mut *(user_data as *mut F);
+        unsafe extern "C" fn trampoline(user_data: *mut c_void) -> bool {
+            let user_data = &mut *(user_data as *mut Box<dyn FnMut() -> bool>);
             user_data()
         }
 
-        match closure.into() {
+        match closure {
             Some(closure) => {
-                // Stable address
-                let closure = Box::new(closure) as Box<dyn FnMut() -> bool>;
-                // Thin pointer
+                // Stable address for trait object
+                let closure: Box<dyn FnMut() -> bool> = Box::new(closure);
+                // Thin pointer to trait object
                 let closure = Box::new(closure);
                 // Raw pointer
-                let closure = Box::into_raw(closure);
+                let raw_ptr = Box::into_raw(closure);
 
-                self.fp.abort_callback = Some(trampoline::<F>);
-                self.fp.abort_callback_user_data = closure as *mut c_void;
+                self.fp.abort_callback = Some(trampoline);
+                self.fp.abort_callback_user_data = raw_ptr as *mut c_void;
                 self.abort_callback_safe = None;
             }
             None => {

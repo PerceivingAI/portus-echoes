@@ -525,15 +525,12 @@ fn transcribe_with_state_stream_inner(
 
     let deadline = Instant::now() + timeout;
     let abort_flag = abort_requested.clone();
-    let abort_check: Box<dyn FnMut() -> bool> = Box::new(move || {
+    params.set_abort_callback_safe(Some(move || {
         let explicit_abort = abort_flag
             .as_ref()
             .is_some_and(|requested| requested.load(Ordering::SeqCst));
         inference_abort_requested(explicit_abort, Instant::now(), deadline)
-    });
-    params.set_abort_callback_safe::<Option<Box<dyn FnMut() -> bool>>, Box<dyn FnMut() -> bool>>(
-        Some(abort_check),
-    );
+    }));
 
     if super::COMPILED_SEGMENT_DELIVERY {
         use whisper_rs::SegmentCallbackData;

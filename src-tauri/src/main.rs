@@ -194,7 +194,10 @@ fn main() {
         .expect("error while building PortusEchoes");
 
     app.run(|handle, event| match event {
-        tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit => {
+        tauri::RunEvent::ExitRequested { api, .. } => {
+            api.prevent_exit();
+        }
+        tauri::RunEvent::Exit => {
             handle.state::<hotkey::HotkeyEngine>().stop();
             recording::shutdown(handle);
             for (_, window) in handle.webview_windows() {
