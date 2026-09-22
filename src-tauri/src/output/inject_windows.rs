@@ -28,7 +28,41 @@ unsafe fn focus_window_under_pointer() -> Result<(), ()> {
         SetForegroundWindow(root);
     }
 
+    try_focus_element_via_uia(point);
+
     Ok(())
+}
+
+fn try_focus_element_via_uia(pt: winapi::shared::windef::POINT) {
+    unsafe {
+        let _ = windows::Win32::System::Com::CoInitializeEx(
+            None,
+            windows::Win32::System::Com::COINIT_MULTITHREADED,
+        );
+
+        let uia: Result<windows::Win32::UI::Accessibility::IUIAutomation, _> =
+            windows::Win32::System::Com::CoCreateInstance(
+                &windows::Win32::UI::Accessibility::CUIAutomation,
+                None,
+                windows::Win32::System::Com::CLSCTX_INPROC_SERVER,
+            );
+
+        if let Ok(automation) = uia {
+            let point = windows::Win32::Foundation::POINT { x: pt.x, y: pt.y };
+            if let Ok(element) = automation.ElementFromPoint(point) {
+                if let Ok(control_type) = element.CurrentControlType() {
+                    use windows::Win32::UI::Accessibility::*;
+                    if control_type == UIA_EditControlTypeId
+                        || control_type == UIA_DocumentControlTypeId
+                        || control_type == UIA_ComboBoxControlTypeId
+                        || control_type == UIA_CustomControlTypeId
+                    {
+                        let _ = element.SetFocus();
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// Inject `text` at the active caret position of the window under the system pointer.
